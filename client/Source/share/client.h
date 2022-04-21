@@ -19,7 +19,7 @@ enum SizeOfStrings
 {
 	g_QuitMsgSize = 4,
 	g_HelpMsgFlagSize = 6,
-	g_HelpMsgSize = 654,
+	g_HelpMsgSize = 992,
 
 };
 

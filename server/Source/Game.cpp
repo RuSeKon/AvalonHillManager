@@ -33,11 +33,11 @@ static const char g_UnknownReqMsg[]={"Unknown request, enter help!\n"};
 static const char g_MarketCondMsg[]={"\nCurrent month is %dth\n"
 									"_________________________"
 									"Players still active:\n"
-									"%			    %d\n"
+									"%%			    %d \n"
 									"Bank sells:  items   min.price\n"
-									"%				%d		  %d\n"
+									"%%				%d		  %d \n"
 									"Bank buys:   items	  max.price\n"
-									"%				%d		  %d\n"};
+									"%%				%d		  %d \n"};
 
 static const char g_GetInfoMsg[]={"\n%s's state of affairs (num: %d):\n"
 							"_________________________________"
@@ -223,7 +223,7 @@ void Game::RequestProc(Player* plr, const Request& req)
 		sprintf(msg.get(), g_WelcomeMsg, plr->m_Name, plr->m_PlayerNumber);
 		plr->Send(msg.get());
 		
-		sprintf(msg.get(), g_WelcomeAllMsg, p->m_Name, p->m_PlayerNumber);
+		sprintf(msg.get(), g_WelcomeAllMsg, plr->m_Name, plr->m_PlayerNumber);
 		SendAll(msg.get(), plr);
 		return;
 	}
@@ -306,8 +306,8 @@ void Game::GetInfo(Player* plr, const Request& req, int all)
 	}
 	else if(all == reqMarket)
 	{
-		std::unique_ptr<char> msg(new char[strlen(g_MarketCondMsg) + 14]);
-    	sprintf(msg.get(), g_MarketCondMsg, m_Month,
+		std::unique_ptr<char> msg(new char[strlen(g_MarketCondMsg) + 24]);
+    	sprintf(msg.get(), g_MarketCondMsg, m_Month, 0, 
 							m_BankerRaw[0], m_BankerRaw[1],
 							m_BankerProd[0], m_BankerProd[1]);
     	plr->Send(msg.get());
