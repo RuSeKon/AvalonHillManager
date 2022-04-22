@@ -1,5 +1,5 @@
 # AvalonHillManager
-#anagement is a multiplayer game from Avalon Hill. The Management was offered by 
+@Management is a multiplayer game from Avalon Hill. The Management was offered by 
 the Avalon Hill Company for training in the basics of enterprise management.
 
 In my implementation, the game consists of two subprojects, a client and a server.
