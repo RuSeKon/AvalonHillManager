@@ -1,0 +1,25 @@
+#The client implementation also uses the "IFdHandler" interface 
+and the "select" system call. Instead of an "EventSelector" 
+object, a simple do while loop is used in the main function.
+
+As elements for "select" lists, only two descriptors are used, 
+one for the socket connected via TCP/IP with the server and 
+one descriptor for stdin.
+
+Thus, when entering, the "select" returns control, the virtual
+function "VProcessing" is called, which processes the input
+and sends it to the server.
+
+Messages sent by the server are processed and output to the 
+standard stream. It was decided to store the text of "help"
+request on the client so as not to send 1kb of unchanged data
+over the network.
+
+Data processing is organized in the classical way - 
+through a buffer, where data is read from one stream and 
+from where it is output to another.
+
+For system calls written wrappers, except of "send" and "recv", 
+errors of which are handled separately.
+
+There is nothing more interesting here:)
