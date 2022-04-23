@@ -9,11 +9,11 @@
 #include "application.h"
 
 #ifndef MAXGAMERNUMBER
-#define MAXGAMERNUMBER 5
+#define MAXGAMERNUMBER 2
 #endif
 
 #ifndef END
-#define END 12
+#define END 3 
 #endif
 
 enum ConstantsForGame { 

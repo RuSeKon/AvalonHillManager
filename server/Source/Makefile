@@ -20,4 +20,4 @@ clean :
 	rm -f *.o server deps.mk
 
 run_tst :
-	./server 4878
+	./Server 4878

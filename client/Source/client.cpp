@@ -19,6 +19,8 @@ static const char g_HelpMsg[] {	" ______________________________________________
 								"|______________________________________________________________|\n"
 								"| infoLst | list of all remaining players		       |\n"
 								"|______________________________________________________________|\n"
+								"| produce | manufacturing products in factories		|\n"
+								"|______________________________________________________________|\n"
 								"|   buy   | applying for the purchase of raw materials 	       |\n"
 								"|______________________________________________________________|\n"
 								"|   sell  | submitting an application for the sale of products |\n"
@@ -120,13 +122,14 @@ void ServerForClient::VProcessing(bool r, bool w)
 		}
 		else if(strstr(m_Buffer, g_HelpMsgFlag))
 		{
+			std::cout << "HELP SIZE = " << strlen(g_HelpMsg) << std::endl;
 			Write(STDOUT_FILENO, g_HelpMsg, g_HelpMsgSize);
 			m_BufUsed = 0;
 			return;
 		}
 		
 
-		Write(STDOUT_FILENO, "SERVER: ", 8);
+		Write(STDOUT_FILENO, "\nSERVER: ", 8);
 		for(int i=0; i < m_BufUsed; i++)
 		{
 			if(m_Buffer[i] == '\n') 
