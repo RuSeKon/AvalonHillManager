@@ -1,0 +1,56 @@
+#The most significant points are marked - @
+
+#This text is probably not similar to the documentation.
+#The basic concept of building a server is a classic event-driven approach.
+
+For system calls written wrappers, except of "send" and "recv", 
+errors of which are handled separately. (errproc.h and Errproc.cpp)
+
+@Implementation is consist of two parts:
+First - application interface, and second - Game logic.
+
+The application part describes the "IFdHandler" interface for working
+with descriptors and the "EventSelector" for implementing the select system call
+("EventSelector" is built according to the singleton pattern).
+
+@The EventSelector controls the main loop and holds all of the program's CPU time.
+
+In the main loop(method EventSelector.Run()), the event is fetched 
+(readiness of descriptors for reading) and processed (calling the "VProcessing"
+function for the selected descriptors).
+
+@"VProcessing" is where all the magic happens:)
+
+@Based on the "IFdHandler" interface, two classes "Player" and "Game" are created.
+Each of them respectively implements the "VProcessing" function.
+
+The "Game" has both public and private methods, the "Player" is completely private and 
+declares the "Game" a friend.
+
+Game is the singletone based too, and its object create only once in main function.
+This class has a "Start" method that initializes the listening socket and 
+creates a single object.
+The Game has a pointer to the "EventSelector" (passed to the start and the constructor) 
+for adding objects to the selection.
+
+When constructing an object, the "Game" adds itself to the "EventSelector".
+When a connection request is received, "Game" object is select and call it"VProcessing" method.
+@In "Game" "VProcessing", connection request accepted, "Player" object is created,
+added to the "EventSelecotr" and in the container in the game itself.
+
+"Player" object, holds player resources, building bids, and auction bids.
+@In Player VProcessing the request received from the user is parsed and call public "Game" method.
+
+@Further logic is described in the code and is easily perceived based on the names of the methods.
+
+I will only describe the method MarketChange():
+  g_MarketLevels - the intersection of a row with a column denotes the probability
+  of transition from current level(raw) to level number = column.
+  
+  In method body: the random number calculation function is taken from the textbook 
+  and solves the problem of distributing the values of the least significant bits.
+  
+  Then I just go along the line from the g_MarketLevels and add up the value of probabilities 
+  until I get a number equal to or greater than the rand one.
+  
+  The column on which the account stopped will be the next level.
