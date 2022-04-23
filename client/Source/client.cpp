@@ -13,21 +13,21 @@
 static const char g_QuitMsg[] {"quit"};
 static const char g_HelpMsgFlag[] {"helpMe"};
 static const char g_HelpMsg[] {	" ______________________________________________________________\n"
-								"|  market | info about current market condition				|\n"
+								"|  market | info about current market condition		       |\n"
 								"|______________________________________________________________|\n"
-								"|   info  | info about another player							|\n"
+								"|   info  | info about another player			       |\n"
 								"|______________________________________________________________|\n"
-								"| infoLst | list of all remaining players						|\n"
+								"| infoLst | list of all remaining players		       |\n"
 								"|______________________________________________________________|\n"
-								"|   buy   | applying for the purchase of raw materials			|\n"
+								"|   buy   | applying for the purchase of raw materials 	       |\n"
 								"|______________________________________________________________|\n"
 								"|   sell  | submitting an application for the sale of products |\n"
 								"|______________________________________________________________|\n"
-								"|  build  | construction of a new factory						|\n"
+								"|  build  | construction of a new factory		       |\n"
 								"|______________________________________________________________|\n"
-								"|   turn  | completion confirmation							|\n"
+								"|   turn  | completion confirmation			       |\n"
 								"|______________________________________________________________|\n"
-								"|   help  | available commands									|\n"
+								"|   help  | available commands				       |\n"
 								"|______________________________________________________________|\n"};
 
 /* Client Object-oriented design implementation */
@@ -113,17 +113,18 @@ void ServerForClient::VProcessing(bool r, bool w)
 			std::cerr << "Error buffer overflow\n";
 			exit(EXIT_FAILURE);
 		}
+		else if(m_BufUsed == 0)
+		{
+			std::cout << "Goodbye!\n";
+			exit(EXIT_FAILURE);
+		}
 		else if(strstr(m_Buffer, g_HelpMsgFlag))
 		{
 			Write(STDOUT_FILENO, g_HelpMsg, g_HelpMsgSize);
 			m_BufUsed = 0;
 			return;
 		}
-		else if(m_BufUsed == 0)
-		{
-			std::cout << "Game over:)\n";
-			exit(EXIT_FAILURE);
-		}
+		
 
 		Write(STDOUT_FILENO, "SERVER: ", 8);
 		for(int i=0; i < m_BufUsed; i++)

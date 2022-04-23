@@ -9,7 +9,11 @@
 #include "application.h"
 
 #ifndef MAXGAMERNUMBER
-#define MAXGAMERNUMBER 3
+#define MAXGAMERNUMBER 5
+#endif
+
+#ifndef END
+#define END 12
 #endif
 
 enum ConstantsForGame { 
@@ -17,7 +21,8 @@ enum ConstantsForGame {
 	g_MaxName = 10,
 	g_BufSize = 256,
 	g_MaxParams = 2,
-	g_CommandListSize = 9
+	g_CommandListSize = 9, 
+	g_WelcomeMsgSize = 58
 };
 
 enum ApplicationConstants { //for auction
@@ -73,7 +78,7 @@ class Player : public IFdHandler
 	int m_PlayerProd[2];
 
 	bool m_End;
-public:
+	
 	Player(Game *a_master, int fd, int num);
 	~Player() noexcept;
 
@@ -122,9 +127,9 @@ public:
 	~Game() noexcept;
 	static Game *GameStart(EventSelector *sel, int port);
 
+	void VProcessing(bool r, bool w) final;
 	bool GameBegun() const {return m_GameBegun;}
 	void RemovePlayer(Player *s);
-	void VProcessing(bool r, bool w) final;
 	void RequestProc(Player* plr, const Request& req);
     void SendAll(const char* message, Player* except);
 	
@@ -146,11 +151,12 @@ public:
 	void Auction(std::vector<Application>& src, int flag);
 	void ChangeMarketLvl();
 	void SetMarketLvl(int num);
+	void GameOver(Player* winner);
 private:
 	Game(EventSelector *sel, int fd); //Use GameStart!
 };
 
-/*Type to work with player requests*/
+/*Class to work with player requests*/
 class Request
 {
 	char* m_pText;

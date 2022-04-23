@@ -11,7 +11,7 @@ std::tuple<std::string, std::string> Parse(int, char**);
 
 enum constants { 
 		g_BufSize = 256,
-		g_ValidPort = 1000
+		g_ValidPort = 1024
 };
 
 
@@ -19,7 +19,7 @@ enum SizeOfStrings
 {
 	g_QuitMsgSize = 4,
 	g_HelpMsgFlagSize = 6,
-	g_HelpMsgSize = 992,
+	g_HelpMsgSize = 1015,
 
 };
 

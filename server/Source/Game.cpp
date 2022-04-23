@@ -4,8 +4,9 @@
 #include <arpa/inet.h>
 #include <unistd.h> 
 #include <memory>
-#include <cstring>
-#include <vector> 
+#include <cstring> 
+#include <vector>
+#include <iostream> 
 #include <algorithm>
 #include "share/errproc.h"
 #include "share/application.h"
@@ -31,13 +32,13 @@ static const char g_InvalidArgumentMsg[]={"Invalid argument, try "
 static const char g_UnknownReqMsg[]={"Unknown request, enter help!\n"};
 
 static const char g_MarketCondMsg[]={"\nCurrent month is %dth\n"
-									"_________________________"
+									"_________________________\n"
 									"Players still active:\n"
-									"%%			    %d \n"
+									"%%		%d \n"
 									"Bank sells:  items   min.price\n"
-									"%%				%d		  %d \n"
-									"Bank buys:   items	  max.price\n"
-									"%%				%d		  %d \n"};
+									"%%		%d   	%d \n"
+									"Bank buys:   items   max.price\n"
+									"%%		%d   	%d \n"};
 
 static const char g_GetInfoMsg[]={"\n%s's state of affairs (num: %d):\n"
 							"_________________________________"
@@ -71,6 +72,8 @@ static const char g_GameNotBegunMsg[]={"The game haven't started yet. "
 
 static const char g_AplApplyMsg[] = {"Application apply!\n"};
 
+static const char g_GameOverMsg[] = {"Congratulation, your came to end. Winner is %s ($%d)\n"};
+
 
 static const char *g_CommandList[] = {"market\0", "info\0", "pod\0",
                 "buy\0", "sell\0", "build\0", "turn\0", "help\0", "infoLst\0"};
@@ -97,7 +100,7 @@ Game::Game(EventSelector *sel, int fd) : IFdHandler(fd), m_pSelector(sel),
 										 m_BankerRaw{0, 0}, m_BankerProd{0, 0}					 
 {
 	m_pSelector->Add(this);
-	m_List.reserve(g_MaxGamerNumber);
+	//m_List.reserve(g_MaxGamerNumber);
 	m_Numbers = new int[g_MaxGamerNumber]{0};
 }
 
@@ -145,6 +148,7 @@ void Game::RemovePlayer(Player *s)
 		{
 			m_pSelector->Remove(*x);
 			delete *x;
+			m_List.erase(x);
 			m_Numbers[(*x)->m_PlayerNumber -1] = 0;
 			break;
 		}
@@ -219,7 +223,7 @@ void Game::RequestProc(Player* plr, const Request& req)
 		plr->m_Name = new char[sizeof(req.GetText())];
 		strcpy(plr->m_Name, req.GetText());
 
-		std::unique_ptr<char> msg(new char[58/*strlen(g_WelcomeMsg)+13*/]);
+		std::unique_ptr<char> msg(new char[g_WelcomeMsgSize]);
 		sprintf(msg.get(), g_WelcomeMsg, plr->m_Name, plr->m_PlayerNumber);
 		plr->Send(msg.get());
 		
@@ -385,7 +389,7 @@ void Game::BuyReq(Player* plr, const Request& arg)
 	
 	for(int i=0; i < 2; i++)
 			plr->m_PlayerRaw[i] = arg.GetParam(i+1);
-	plr->Send("\nApplication apply!\n");
+	plr->Send(g_AplApplyMsg);
 }
 
 void Game::SellReq(Player* plr, const Request& arg)
@@ -432,7 +436,7 @@ void Game::BuildFactory(Player* plr)
 void Game::SetMarketLvl(int num)
 {
 	int PlayerCount = m_List.size();
-	float multi{0};
+	double multi{0};
 	multi = 1+((num-1)*0.5);
 	m_BankerRaw[0] = multi*PlayerCount;
 
@@ -541,6 +545,9 @@ void Game::NextMonth()
 	std::vector<Application> RawContainer;
 	std::vector<Application> ProdContainer;
 
+	int maxMoney{0};
+	Player* Winner;	
+
 	for(auto x : m_List)
 	{
 ////////*Cost write-off*/
@@ -603,11 +610,20 @@ void Game::NextMonth()
 
 ///////*Change of market level*/
 		ChangeMarketLvl();
+
 		x->m_End = false;
 		RawContainer.push_back(Application(x, x->m_PlayerRaw[0], 
 											x->m_PlayerRaw[1]));
 		ProdContainer.push_back(Application(x, x->m_PlayerProd[0], 
 											x->m_PlayerProd[1]));
+		if(x->m_Resources[resMoney] > maxMoney)
+			Winner = x;
+	}
+	
+	if(m_Month == END || m_List.size() == 0)
+	{
+		GameOver(Winner);
+		return;
 	}
 
 	SendAll("\nAuction starting!\n", 0);
@@ -616,3 +632,18 @@ void Game::NextMonth()
 	
 	m_Month++;
 }
+
+void Game::GameOver(Player* winner)
+{
+	std::unique_ptr<char> msg(new char[strlen(g_GameOverMsg) + 15]);
+	sprintf(msg.get(), g_GameOverMsg, winner->m_Name, winner->m_Resources[resMoney]);
+	SendAll(msg.get(), nullptr);
+
+
+	for(auto x : m_List)
+	{
+		RemovePlayer(x);
+	}
+
+	m_pSelector->BreakLoop();
+}	
