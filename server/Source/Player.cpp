@@ -10,15 +10,15 @@
 
 
 /* SECTION FOR CONSTANT MESSAGES */
-static const char g_GreetingMsg[]={"Your welcome! Please enter your name: \n\0"};
-static const char g_IllegalMsg[]={"Illegal request, buffer overflow...Goodbye!\n\0"};
+static const char g_GreetingMsg[]={"Your welcome! Please enter your name: \n"};
+static const char g_IllegalMsg[]={"Illegal request, buffer overflow...Goodbye!\n"};
 
 
 
 static const char g_BoughtResMsg[]={"\nYour bought %d units of resources at a "
-								"price of %d $.\n\0"};
+								"price of %d $.\n"};
 static const char g_SellResMsg[]={"\nYour sell %d units of products at a price "
-								"of %d $.\n\0"};
+								"of %d $.\n"};
 
 ////////////////////////////PLAYER/////////////////////////////////////////////////////
 
@@ -117,6 +117,7 @@ int Player::ApplicationAccepted(int how, int flag)
 		m_Resources[resMoney] -= amount * m_PlayerRaw[1];
 		
 		sprintf(msg.get(), g_BoughtResMsg, amount, m_PlayerRaw[1]);
+		strcat(msg.get(), "\0");
 		Send(msg.get());
 		m_PlayerRaw[0] -= amount;
 		return amount;
@@ -133,6 +134,7 @@ int Player::ApplicationAccepted(int how, int flag)
 		m_Resources[resMoney] += amount * m_PlayerProd[1];
 		
 		sprintf(msg.get(), g_SellResMsg, amount, m_PlayerProd[1]);
+		strcat(msg.get(), "\0");
 		Send(msg.get());
 		m_PlayerProd[0] -= amount;
 		return amount;

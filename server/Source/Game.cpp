@@ -14,19 +14,19 @@
  
 
 /* SECTION FOR CONSTANT MESSAGES */
-static const char g_AlreadyPlayingMsg[]={"Game is already started.\n\n\0"};
+static const char g_AlreadyPlayingMsg[]={"Game is already started.\n\n"};
 
-static const char g_NotNameMsg[]={"Enter only first name (not more ten symbols).\n\n\0"};
+static const char g_NotNameMsg[]={"Enter only first name (not more ten symbols).\n\n"};
 
-static const char g_BadRequestMsg[]={"Bad request, try again or type help:)\n\n\0"};
+static const char g_BadRequestMsg[]={"Bad request, try again or type help:)\n\n"};
 
-static const char g_WelcomeMsg[]={"Welcome to the game %s, your play-number: %d\n\n\0"};
+static const char g_WelcomeMsg[]={"Welcome to the game %s, your play-number: %d\n\n"};
 
-static const char g_WelcomeAllMsg[]={"%s number %d joined to the game!\n\n\0"};
+static const char g_WelcomeAllMsg[]={"%s number %d joined to the game!\n\n"};
 
-static const char g_InvalidArgumentMsg[]={"Invalid argument, try again or type help.\n\n\0"};
+static const char g_InvalidArgumentMsg[]={"Invalid argument, try again or type help.\n\n"};
 
-static const char g_UnknownReqMsg[]={"Unknown request, enter help!\n\n\0"};
+static const char g_UnknownReqMsg[]={"Unknown request, enter help!\n\n"};
 
 static const char g_MarketCondMsg[]={"\nCurrent month is %dth\n"
 									"_________________________\n"
@@ -35,7 +35,7 @@ static const char g_MarketCondMsg[]={"\nCurrent month is %dth\n"
 									"Bank sells:  items   min.price\n"
 									"%%		%d   	%d \n"
 									"Bank buys:   items   max.price\n"
-									"%%		%d   	%d \n\n\0"};
+									"%%		%d   	%d \n\n"};
 
 static const char g_GetInfoMsg[]={"\n%s's state of affairs (num: %d):\n"
 							"______________________________________\n"
@@ -43,29 +43,29 @@ static const char g_GetInfoMsg[]={"\n%s's state of affairs (num: %d):\n"
 							"Materials: %d\n"
 							"Products: %d\n"
 							"Regular factorie: %d;\n"
-							"Build factorie: %d;\n\n\0"};
+							"Build factorie: %d;\n\n"};
 
-static const char g_HelpMsg[]={"helpMe\n\0"};
+static const char g_HelpMsg[]={"helpMe\n"};
 
-static const char g_PlayerListMsg[]={"\n%d. %s\n\0"};
+static const char g_PlayerListMsg[]={"\n%d. %s\n"};
 
-static const char g_BadRawQuantMsg[]={"The bank does not sell that amount.\n\n\0"};
+static const char g_BadRawQuantMsg[]={"The bank does not sell that amount.\n\n"};
 
-static const char g_BadRawCostMsg[]={"Your cost is less than market.\n\n\0"};
+static const char g_BadRawCostMsg[]={"Your cost is less than market.\n\n"};
 
-static const char g_BadProdQuantMsg[]={"Сheck the number of products in the application.\n\n\0"};
+static const char g_BadProdQuantMsg[]={"Сheck the number of products in the application.\n\n"};
 
-static const char g_BadProdCostMsg[]={"Your cost is larger than market.\n\n\0"};
+static const char g_BadProdCostMsg[]={"Your cost is larger than market.\n\n"};
 
-static const char g_TooFewFactories[]={"You don't have as many factories to produce.\n\n\0"};
+static const char g_TooFewFactories[]={"You don't have as many factories to produce.\n\n"};
 
-static const char g_InsufficientFunds[]={"Insufficient funds to build so many factoryes.\n\n\0"};
+static const char g_InsufficientFunds[]={"Insufficient funds to build so many factoryes.\n\n"};
 
-static const char g_GameNotBegunMsg[]={"The game haven't started yet. Please wait!\n\n\0"};
+static const char g_GameNotBegunMsg[]={"The game haven't started yet. Please wait!\n\n"};
 
-static const char g_AplApplyMsg[] = {"Application apply!\n\n\0"};
+static const char g_AplApplyMsg[] = {"Application apply!\n\n"};
 
-static const char g_GameOverMsg[] = {"Congratulation, your came to end. Winner is %s ($%d)\n\n\0"};
+static const char g_GameOverMsg[] = {"Congratulation, your came to end. Winner is %s ($%d)\n\n"};
 
 
 static const char *g_CommandList[] = {"market\0", "info\0", "produce\0",
@@ -225,9 +225,11 @@ void Game::RequestProc(Player* plr, const Request& req)
 		plr->m_Name = req.GetText();
 
 		sprintf(m_pMsg.get(), g_WelcomeMsg, plr->m_Name.c_str(), plr->m_PlayerNumber);
+		strcat(m_pMsg.get(), "\0");
 		plr->Send(m_pMsg.get());
 
 		sprintf(m_pMsg.get(), g_WelcomeAllMsg, plr->m_Name.c_str(), plr->m_PlayerNumber);
+		strcat(m_pMsg.get(), "\0");
 		SendAll(m_pMsg.get(), plr);
 
 		if(m_PlayersCounter == g_MaxGamerNumber)
@@ -306,6 +308,7 @@ void Game::GetInfo(Player* plr, const Request& req, int all)
 				ptr += b;
 				b=0;
 		}
+		strcat(m_pMsg.get(), "\0");
 		plr->Send(m_pMsg.get());
 	}
 	else if(all == reqMarket)
@@ -314,6 +317,7 @@ void Game::GetInfo(Player* plr, const Request& req, int all)
 							static_cast<int>(m_List.size()), 
 							m_BankerRaw[0], m_BankerRaw[1],
 							m_BankerProd[0], m_BankerProd[1]);
+		strcat(m_pMsg.get(), "\0");
     	plr->Send(m_pMsg.get());
 	}
 	else
@@ -348,6 +352,7 @@ void Game::GetInfo(Player* plr, const Request& req, int all)
 						   tmp->m_Resources[resRaw], tmp->m_Resources[resProd],
 						   tmp->m_Resources[resFactory],
 						   static_cast<int>(tmp->m_ConstrFactories.size()));
+		strcat(m_pMsg.get(), "\0");
     	plr->Send(m_pMsg.get());
 	}
 }
@@ -632,6 +637,7 @@ void Game::NextMonth()
 void Game::GameOver(Player* winner)
 {
 	sprintf(m_pMsg.get(), g_GameOverMsg, winner->m_Name.c_str(), winner->m_Resources[resMoney]);
+	strcat(m_pMsg.get(), "\0");
 	SendAll(m_pMsg.get(), nullptr);
 
 
