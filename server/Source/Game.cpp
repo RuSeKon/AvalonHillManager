@@ -14,22 +14,19 @@
  
 
 /* SECTION FOR CONSTANT MESSAGES */
-static const char g_AlreadyPlayingMsg[]={"Game is already started.\n\n"};
+static const char g_AlreadyPlayingMsg[]={"Game is already started.\n\n\0"};
 
-static const char g_NotNameMsg[]={"Enter only first name (not more ten symbols).\n\n"};
+static const char g_NotNameMsg[]={"Enter only first name (not more ten symbols).\n\n\0"};
 
-static const char g_BadRequestMsg[]={"Bad request, try again or type help:)\n\n"};
+static const char g_BadRequestMsg[]={"Bad request, try again or type help:)\n\n\0"};
 
-static const char g_WelcomeMsg[]={"Welcome to the game %s, " 
-						   "your play-number: %d\n\n"};
+static const char g_WelcomeMsg[]={"Welcome to the game %s, your play-number: %d\n\n\0"};
 
-static const char g_WelcomeAllMsg[]={"%s number %d"
-												" joined to the game!\n\n"};
+static const char g_WelcomeAllMsg[]={"%s number %d joined to the game!\n\n\0"};
 
-static const char g_InvalidArgumentMsg[]={"Invalid argument, try "
-										  "again or type help.\n\n"};
+static const char g_InvalidArgumentMsg[]={"Invalid argument, try again or type help.\n\n\0"};
 
-static const char g_UnknownReqMsg[]={"Unknown request, enter help!\n\n"};
+static const char g_UnknownReqMsg[]={"Unknown request, enter help!\n\n\0"};
 
 static const char g_MarketCondMsg[]={"\nCurrent month is %dth\n"
 									"_________________________\n"
@@ -38,7 +35,7 @@ static const char g_MarketCondMsg[]={"\nCurrent month is %dth\n"
 									"Bank sells:  items   min.price\n"
 									"%%		%d   	%d \n"
 									"Bank buys:   items   max.price\n"
-									"%%		%d   	%d \n\n"};
+									"%%		%d   	%d \n\n\0"};
 
 static const char g_GetInfoMsg[]={"\n%s's state of affairs (num: %d):\n"
 							"______________________________________\n"
@@ -46,33 +43,29 @@ static const char g_GetInfoMsg[]={"\n%s's state of affairs (num: %d):\n"
 							"Materials: %d\n"
 							"Products: %d\n"
 							"Regular factorie: %d;\n"
-							"Build factorie: %d;\n\n"};
+							"Build factorie: %d;\n\n\0"};
 
-static const char g_HelpMsg[]={"helpMe\n"};
+static const char g_HelpMsg[]={"helpMe\n\0"};
 
-static const char g_PlayerListMsg[]={"\n%d. %s\n"};
+static const char g_PlayerListMsg[]={"\n%d. %s\n\0"};
 
-static const char g_BadRawQuantMsg[]={"The bank does not sell that amount.\n\n"};
+static const char g_BadRawQuantMsg[]={"The bank does not sell that amount.\n\n\0"};
 
-static const char g_BadRawCostMsg[]={"Your cost is less than market.\n\n"};
+static const char g_BadRawCostMsg[]={"Your cost is less than market.\n\n\0"};
 
-static const char g_BadProdQuantMsg[]={"Сheck the number of products in the "
-															"application.\n\n"};
+static const char g_BadProdQuantMsg[]={"Сheck the number of products in the application.\n\n\0"};
 
-static const char g_BadProdCostMsg[]={"Your cost is larger than market.\n\n"};
+static const char g_BadProdCostMsg[]={"Your cost is larger than market.\n\n\0"};
 
-static const char g_TooFewFactories[]={"You don't have as many factories to"
-																" produce.\n\n"};
+static const char g_TooFewFactories[]={"You don't have as many factories to produce.\n\n\0"};
 
-static const char g_InsufficientFunds[]={"Insufficient funds to build so "
-														  "many factoryes.\n\n"};
+static const char g_InsufficientFunds[]={"Insufficient funds to build so many factoryes.\n\n\0"};
 
-static const char g_GameNotBegunMsg[]={"The game haven't started yet. " 
-														    "Please wait!\n\n"};
+static const char g_GameNotBegunMsg[]={"The game haven't started yet. Please wait!\n\n\0"};
 
-static const char g_AplApplyMsg[] = {"Application apply!\n\n"};
+static const char g_AplApplyMsg[] = {"Application apply!\n\n\0"};
 
-static const char g_GameOverMsg[] = {"Congratulation, your came to end. Winner is %s ($%d)\n\n"};
+static const char g_GameOverMsg[] = {"Congratulation, your came to end. Winner is %s ($%d)\n\n\0"};
 
 
 static const char *g_CommandList[] = {"market\0", "info\0", "produce\0",
@@ -95,13 +88,16 @@ enum RequestConstants { //for request processing
 
 Game::Game(EventSelector *sel, int fd) : IFdHandler(fd), m_pSelector(sel),
 										 m_GameBegun(false), m_Month(1),
-										 m_MarketLevel(0), m_List(), 
-										 m_Numbers(nullptr), 
+										 m_PlayersCounter(0), m_MarketLevel(0), 
+										 m_List(), m_pMsg(new char[g_BufSize]),
+										 m_Numbers(g_MaxGamerNumber, false), 
 										 m_BankerRaw{0, 0}, m_BankerProd{0, 0}					 
 {
+
+	// m_pMsg(new char[g_BufSize]) it's not clear how to deal with the new exception
+	// in the smart pointer constructor 
 	m_pSelector->Add(this);
-	//m_List.reserve(g_MaxGamerNumber);
-	m_Numbers = new int[g_MaxGamerNumber]{0};
+	m_List.resserve(g_MaxGamerNumber);
 }
 
 Game::~Game()
@@ -149,7 +145,8 @@ void Game::RemovePlayer(Player *s)
 			m_pSelector->Remove(*x);
 			delete *x;
 			m_List.erase(x);
-			m_Numbers[(*x)->m_PlayerNumber -1] = 0;
+			m_Numbers[(*x)->m_PlayerNumber -1] = false;
+			m_PlayersCounter--;
 			break;
 		}
 	}
@@ -168,32 +165,38 @@ void Game::VProcessing(bool r, bool w)
 		return;
 	
 	size_t num;
+
+	if(m_GameBegun)
+	{
+		send(session_descriptor, g_AlreadyPlayingMsg, strlen(g_AlreadyPlayingMsg));
+		shutdown(session_descriptor);
+		close(session_descriptor);
+		return;
+	}
+
     for(num = 0; num < g_MaxGamerNumber; num++)
 	{
         if(!m_Numbers[num])
-            break;	
+		{
+			m_Numbers[num] = true;
+            break;
+		}
 	}
 			
 	Player *p = new Player(this, session_descriptor, num+1);
 	
-	if(m_GameBegun)
-	{
-		p->Send(g_AlreadyPlayingMsg);
-		delete p;
-	}
-	else
-	{
-		m_pSelector->Add(p);
+	m_pSelector->Add(p);
 		
-		m_List.push_back(p);
-		m_Numbers[num] = 1;
-		if(m_List.size() == g_MaxGamerNumber) 
-		{
-			m_GameBegun = true;
-			SendAll("Game begining!\n", nullptr);
-			SetMarketLvl(3);
-		}
-	}
+	m_PlayersCounter++;
+
+	m_List.push_back(p);
+}
+
+void Game::GameBegining()
+{
+	m_GameBegun = true;
+	SendAll("Game begining!\n", nullptr);
+	SetMarketLvl(3);
 }
 
 void Game::SendAll(const char* message, Player* except)
@@ -203,8 +206,6 @@ void Game::SendAll(const char* message, Player* except)
 			x->Send(message);
 }
 
-
-
 void Game::RequestProc(Player* plr, const Request& req)
 {
 	
@@ -213,22 +214,24 @@ void Game::RequestProc(Player* plr, const Request& req)
 		plr->Send(g_BadRequestMsg);
 		return;
 	}
-	else if(!plr->m_Name)
+	else if(!plr->m_Name.size())
 	{
 		if(strlen(req.GetText()) > g_MaxName)
 		{
 			plr->Send(g_NotNameMsg);
 			return;
 		}
-		plr->m_Name = new char[sizeof(req.GetText())];
-		strcpy(plr->m_Name, req.GetText());
 
-		std::unique_ptr<char> msg(new char[g_WelcomeMsgSize]);
-		sprintf(msg.get(), g_WelcomeMsg, plr->m_Name, plr->m_PlayerNumber);
-		plr->Send(msg.get());
-		
-		sprintf(msg.get(), g_WelcomeAllMsg, plr->m_Name, plr->m_PlayerNumber);
-		SendAll(msg.get(), plr);
+		plr->m_Name = req.GetText());
+
+		sprintf(m_pMsg.get(), g_WelcomeMsg, plr->m_Name.c_str(), plr->m_PlayerNumber);
+		plr->Send(m_pMsg.get());
+
+		sprintf(m_pMsg.get(), g_WelcomeAllMsg, plr->m_Name.c_str(), plr->m_PlayerNumber);
+		SendAll(m_pMsg.get(), plr);
+
+		if(m_PlayersCounter == g_MaxGamerNumber)
+			GameBegining();
 		return;
 	}
 
@@ -291,31 +294,27 @@ void Game::GetInfo(Player* plr, const Request& req, int all)
 {
 	
 	if(all == reqPlayerAll)
-	{
-		std::unique_ptr<char> msg(new char[(strlen(g_PlayerListMsg)+9)*
-													 g_MaxGamerNumber]);
-		
-		char* ptr = msg.get();
+	{		
+		char* ptr = m_pMsg.get();
 		size_t b{0};
 
 		for(auto x : m_List)
 		{
 				b = sprintf(ptr, g_PlayerListMsg, 
 								   x->m_PlayerNumber,
-								   x->m_Name);
+								   x->m_Name.c_str());
 				ptr += b;
 				b=0;
 		}
-		plr->Send(msg.get());
+		plr->Send(m_pMsg.get());
 	}
 	else if(all == reqMarket)
 	{
-		std::unique_ptr<char> msg(new char[strlen(g_MarketCondMsg) + 24]);
-    	sprintf(msg.get(), g_MarketCondMsg, m_Month, 
+    	sprintf(m_pMsg.get(), g_MarketCondMsg, m_Month, 
 							static_cast<int>(m_List.size()), 
 							m_BankerRaw[0], m_BankerRaw[1],
 							m_BankerProd[0], m_BankerProd[1]);
-    	plr->Send(msg.get());
+    	plr->Send(m_pMsg.get());
 	}
 	else
 	{
@@ -343,13 +342,13 @@ void Game::GetInfo(Player* plr, const Request& req, int all)
 				}
 			}
 		}
-		std::unique_ptr<char> msg(new char[strlen(g_GetInfoMsg)+32]);
-    	sprintf(msg.get(), g_GetInfoMsg, tmp->m_Name, 
+		
+    	sprintf(m_pMsg.get(), g_GetInfoMsg, tmp->m_Name.c_str(), 
 						   tmp->m_PlayerNumber, tmp->m_Resources[resMoney],
 						   tmp->m_Resources[resRaw], tmp->m_Resources[resProd],
 						   tmp->m_Resources[resFactory],
 						   static_cast<int>(tmp->m_ConstrFactories.size()));
-    	plr->Send(msg.get());
+    	plr->Send(m_pMsg.get());
 	}
 }
 
@@ -632,9 +631,8 @@ void Game::NextMonth()
 
 void Game::GameOver(Player* winner)
 {
-	std::unique_ptr<char> msg(new char[strlen(g_GameOverMsg) + 15]);
-	sprintf(msg.get(), g_GameOverMsg, winner->m_Name, winner->m_Resources[resMoney]);
-	SendAll(msg.get(), nullptr);
+	sprintf(m_pMsg.get(), g_GameOverMsg, winner->m_Name.c_str(), winner->m_Resources[resMoney]);
+	SendAll(m_pMsg.get(), nullptr);
 
 
 	for(auto x : m_List)

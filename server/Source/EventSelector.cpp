@@ -19,7 +19,7 @@ void EventSelector::Add(IFdHandler *h)
 	int fd = h->GetFd();
 	if(!m_pFdArray) {
 		m_ArrayLength = fd > 15 ? fd + 1 : 16;
-		m_pFdArray = new IFdHandler*[m_ArrayLength];
+		m_pFdArray = new *IFdHandler[m_ArrayLength];
 		for(i = 0; i < m_ArrayLength; i++)
 			m_pFdArray[i] = 0;
 		m_MaxFd = -1;
@@ -58,7 +58,8 @@ void EventSelector::Run()
 		fd_set rds, wrs;
 		FD_ZERO(&rds);
 		FD_ZERO(&wrs);
-		for(i=0; i < m_ArrayLength; i++){
+		for(i=0; i < m_ArrayLength; i++)
+		{
 			if(m_pFdArray[i])
 			{
 				if(m_pFdArray[i]->WantRead())
@@ -68,14 +69,17 @@ void EventSelector::Run()
 			}
 		}
 		int res = select(m_MaxFd+1, &rds, &wrs, 0, 0);
-		if(res < 0) {
+		if(res < 0) 
+		{
 			if(errno == EINTR) //If we need to process input signals
 				continue;
 			else
 				break; //Need to proceed!!!!!
 		}
-		if(res > 0) {
-			for(i = 0; i < m_ArrayLength; i++) {
+		if(res > 0) 
+		{
+			for(i = 0; i < m_ArrayLength; i++) 
+			{
 				if(!m_pFdArray[i])
 					continue;
 				bool r = FD_ISSET(i, &rds);

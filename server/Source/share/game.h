@@ -6,6 +6,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <memory>
 #include "application.h"
 
 #ifndef MAXGAMERNUMBER
@@ -21,8 +22,7 @@ enum ConstantsForGame {
 	g_MaxName = 10,
 	g_BufSize = 256,
 	g_MaxParams = 2,
-	g_CommandListSize = 9, 
-	g_WelcomeMsgSize = 58
+	g_CommandListSize = 9 
 };
 
 enum ApplicationConstants { //for auction
@@ -60,10 +60,10 @@ class Player : public IFdHandler
 	friend class Game;
 
 	Game *m_pTheGame;
-	char m_Buffer[g_BufSize];// how to hide it lowlevel implementation?
+	char m_Buffer[g_BufSize];
 	int m_BufUsed;
 
-	char* m_Name;
+	std::string m_Name;
 	int m_PlayerNumber;
 
 	std::unordered_map<int, int> m_Resources;
@@ -102,21 +102,24 @@ struct Application
 											 m_ResrsCost(c) {}
 };
 
-
 class Game : public IFdHandler 
 {
 	EventSelector *m_pSelector;
 	bool m_GameBegun;
+	
 
 	//Number of in-game months elapsed
 	int m_Month;
+	int m_PlayersCounter;
 	//Current market level
 	int m_MarketLevel;
 
 	std::vector<Player*> m_List;
-
+	
+	//pointer for forming messages
+	std::unique_ptr<char> m_pMsg;
 	//array with free Player numbers
-	int* m_Numbers;
+	std::vector<bool> m_Numbers;
 
 	//Auction state
 	int m_BankerRaw[2]; //[0] amount, [1] cost
@@ -128,10 +131,10 @@ public:
 	static Game *GameStart(EventSelector *sel, int port);
 
 	void VProcessing(bool r, bool w) final;
-	bool GameBegun() const {return m_GameBegun;}
 	void RemovePlayer(Player *s);
 	void RequestProc(Player* plr, const Request& req);
     void SendAll(const char* message, Player* except);
+	void GameBegining();
 	
 
 			/*PROCESSING PLAYER REQUESTS*/

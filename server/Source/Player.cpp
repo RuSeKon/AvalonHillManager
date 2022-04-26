@@ -10,21 +10,21 @@
 
 
 /* SECTION FOR CONSTANT MESSAGES */
-static const char g_GreetingMsg[]={"Your welcome! Please enter your name: \n"};
-static const char g_IllegalMsg[]={"Illegal request, buffer overflow...Goodbye!\n"};
+static const char g_GreetingMsg[]={"Your welcome! Please enter your name: \n\0"};
+static const char g_IllegalMsg[]={"Illegal request, buffer overflow...Goodbye!\n\0"};
 
 
 
 static const char g_BoughtResMsg[]={"\nYour bought %d units of resources at a "
-								"price of %d $.\n"};
+								"price of %d $.\n\0"};
 static const char g_SellResMsg[]={"\nYour sell %d units of products at a price "
-								"of %d $.\n"};
+								"of %d $.\n\0"};
 
 ////////////////////////////PLAYER/////////////////////////////////////////////////////
 
 Player::Player(Game *a_master, int fd, int num)
 		: IFdHandler(fd), m_pTheGame(a_master), m_BufUsed(0),
-		 m_Name(0), m_PlayerNumber(num), m_Enterprise(0), m_End(false)
+		 m_Name(), m_PlayerNumber(num), m_Enterprise(0), m_End(false)
 {
 	m_Resources[resFactory] = 2;
 	m_Resources[resRaw] = 4;
@@ -35,11 +35,9 @@ Player::Player(Game *a_master, int fd, int num)
 
 Player::~Player()
 {
-	if(m_Name) delete[] m_Name;
 	shutdown(GetFd(), SHUT_RDWR);
 	close(GetFd());
 }
-
 
 void Player::VProcessing(bool r, bool w)
 {
@@ -70,7 +68,8 @@ void Player::Send(const char *message)
 {
 	int res{0};
 	res = send(GetFd(), message, strlen(message), 0);
-	if(res == -1 || res == 0) {
+	if(res == -1 || res == 0) 
+	{
 		m_pTheGame->RemovePlayer(this);
 		return;
 	}
@@ -104,6 +103,12 @@ Request Player::ParseRequest()
 
 int Player::ApplicationAccepted(int how, int flag)
 { 
+	try {
+	std::unique_ptr<char> msg(new char[strlen(g_BoughtResMsg)+8]);
+	} 
+	catch(...)
+	{} ///??????????????????????????????????????????????????????????
+
 	if(flag == Raw)
 	{
 		int amount{0};
@@ -114,7 +119,7 @@ int Player::ApplicationAccepted(int how, int flag)
 
 		m_Resources[resRaw] += amount;
 		m_Resources[resMoney] -= amount * m_PlayerRaw[1];
-		std::unique_ptr<char> msg(new char[strlen(g_BoughtResMsg)+8]);
+		
 		sprintf(msg.get(), g_BoughtResMsg, amount, m_PlayerRaw[1]);
 		Send(msg.get());
 		m_PlayerRaw[0] -= amount;
@@ -130,7 +135,7 @@ int Player::ApplicationAccepted(int how, int flag)
 
 		m_Resources[resProd] -= amount;
 		m_Resources[resMoney] += amount * m_PlayerProd[1];
-		std::unique_ptr<char> msg(new char[strlen(g_SellResMsg)+8]);
+		
 		sprintf(msg.get(), g_SellResMsg, amount, m_PlayerProd[1]);
 		Send(msg.get());
 		m_PlayerProd[0] -= amount;
