@@ -17,9 +17,10 @@ void EventSelector::Add(IFdHandler *h)
 {
 	int i;
 	int fd = h->GetFd();
-	if(!m_pFdArray) {
+	if(!m_pFdArray) 
+	{
 		m_ArrayLength = fd > 15 ? fd + 1 : 16;
-		m_pFdArray = new *IFdHandler[m_ArrayLength];
+		m_pFdArray = new IFdHandler*[m_ArrayLength];
 		for(i = 0; i < m_ArrayLength; i++)
 			m_pFdArray[i] = 0;
 		m_MaxFd = -1;
@@ -85,9 +86,7 @@ void EventSelector::Run()
 				bool r = FD_ISSET(i, &rds);
 				bool w = FD_ISSET(i, &wrs);
 				if(r || w)
-				{
 					m_pFdArray[i]->VProcessing(r, w);
-				}
 			}
 		}
 	} while(!m_QuitFlag);

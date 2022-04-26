@@ -97,7 +97,7 @@ Game::Game(EventSelector *sel, int fd) : IFdHandler(fd), m_pSelector(sel),
 	// m_pMsg(new char[g_BufSize]) it's not clear how to deal with the new exception
 	// in the smart pointer constructor 
 	m_pSelector->Add(this);
-	m_List.resserve(g_MaxGamerNumber);
+	m_List.reserve(g_MaxGamerNumber);
 }
 
 Game::~Game()
@@ -168,8 +168,8 @@ void Game::VProcessing(bool r, bool w)
 
 	if(m_GameBegun)
 	{
-		send(session_descriptor, g_AlreadyPlayingMsg, strlen(g_AlreadyPlayingMsg));
-		shutdown(session_descriptor);
+		send(session_descriptor, g_AlreadyPlayingMsg, strlen(g_AlreadyPlayingMsg), 0);
+		shutdown(session_descriptor, SHUT_RDWR);
 		close(session_descriptor);
 		return;
 	}
@@ -222,7 +222,7 @@ void Game::RequestProc(Player* plr, const Request& req)
 			return;
 		}
 
-		plr->m_Name = req.GetText());
+		plr->m_Name = req.GetText();
 
 		sprintf(m_pMsg.get(), g_WelcomeMsg, plr->m_Name.c_str(), plr->m_PlayerNumber);
 		plr->Send(m_pMsg.get());
@@ -235,7 +235,7 @@ void Game::RequestProc(Player* plr, const Request& req)
 		return;
 	}
 
-	if(!GameBegun())
+	if(!m_GameBegun)
 	{
 		plr->Send(g_GameNotBegunMsg);
 		return;
