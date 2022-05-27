@@ -94,8 +94,9 @@ Game::Game(EventSelector *sel, int fd) : IFdHandler(fd), m_pSelector(sel),
 										 m_BankerRaw{0, 0}, m_BankerProd{0, 0}					 
 {
 
-	// m_pMsg(new char[g_BufSize]) it's not clear how to deal with the new exception
-	// in the smart pointer constructor 
+	// m_pMsg(new char[g_BufSize]) it's not clear how to deal with the new() exception
+	// in the smart pointer constructor
+	std::cout << "Game created.\n";
 	m_pSelector->Add(this);
 	m_List.reserve(g_MaxGamerNumber);
 }
@@ -142,6 +143,7 @@ void Game::RemovePlayer(Player *s)
 	{
 		if(*x == s)
 		{
+			std::cout << "Player %s deleted.\n", s->m_Name.c_str();
 			m_pSelector->Remove(*x);
 			delete *x;
 			m_List.erase(x);
@@ -197,6 +199,7 @@ void Game::GameBegining()
 	m_GameBegun = true;
 	SendAll("Game begining!\n", nullptr);
 	SetMarketLvl(3);
+	std::cout << "Game begining.\n";
 }
 
 void Game::SendAll(const char* message, Player* except)
@@ -223,6 +226,8 @@ void Game::RequestProc(Player* plr, const Request& req)
 		}
 
 		plr->m_Name = req.GetText();
+
+		std::cout << "Player %s joined to the game.\n", plr->m_Name.c_str();
 
 		sprintf(m_pMsg.get(), g_WelcomeMsg, plr->m_Name.c_str(), plr->m_PlayerNumber);
 		strcat(m_pMsg.get(), "\0");
@@ -294,6 +299,7 @@ void Game::RequestProc(Player* plr, const Request& req)
 
 void Game::GetInfo(Player* plr, const Request& req, int all)
 {
+	std::cout << "Player %s requested info.\n", plr->m_Name.c_str();
 	
 	if(all == reqPlayerAll)
 	{		
@@ -359,6 +365,8 @@ void Game::GetInfo(Player* plr, const Request& req, int all)
 
 void Game::Enterprise(Player* plr, const Request& arg)
 {
+	std::cout << "Player %s requested enterprise %d units of production.\n", 
+										plr->m_Name.c_str(), arg.GetParam(1);
 	int amount = plr->m_Enterprise + arg.GetParam(1);
 	if(amount > plr->m_Resources[resFactory])
 	{
@@ -372,6 +380,8 @@ void Game::Enterprise(Player* plr, const Request& arg)
 
 void Game::BuyReq(Player* plr, const Request& arg) 
 {
+	std::cout << "Player %s requested buy %d units of resources.\n", 
+								plr->m_Name, arg.GetParam(1);
 	if(arg.GetParam(1) == 0 || arg.GetParam(2) == 0)
 	{
 		plr->Send(g_BadRequestMsg);
@@ -400,6 +410,9 @@ void Game::BuyReq(Player* plr, const Request& arg)
 
 void Game::SellReq(Player* plr, const Request& arg)
 {
+	std::cout << "Player %s requested sell %d units of products.\n", 
+								plr->m_Name, arg.GetParam(1);
+
 	if(arg.GetParam(1) == 0 || arg.GetParam(2) == 0)
 	{
 		plr->Send(g_BadRequestMsg);
@@ -429,6 +442,8 @@ void Game::SellReq(Player* plr, const Request& arg)
 
 void Game::BuildFactory(Player* plr)
 {
+	std::cout << "Player %s requested buld factory.\n",
+									plr->m_Name.c_str(); 
 	if(plr->m_Resources[resMoney] < 2500)
 	{
 		plr->Send(g_InsufficientFunds);
@@ -441,6 +456,7 @@ void Game::BuildFactory(Player* plr)
 
 void Game::SetMarketLvl(int num)
 {
+	std::cout << "Market level set to %d state.\n", num;
 	int PlayerCount = m_List.size();
 	double multi{0};
 	multi = 1+((num-1)*0.5);
@@ -476,6 +492,7 @@ void Game::ChangeMarketLvl()
 
 void Game::Auction(std::vector<Application>& src, int flag)
 {
+	std::cout << "Auction begin.\n";
 	int left{0};
 
 	if(flag == Raw)
