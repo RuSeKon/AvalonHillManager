@@ -5,9 +5,9 @@
 #include <iostream>
 #include <tuple>
 #include <cstring>
-#include "share/client.h"
-#include "share/application.h"
-#include "share/errproc.h"
+#include "include/client.h"
+#include "include/application.h"
+#include "include/errproc.h"
 
 
 static const char g_QuitMsg[] {"quit"};

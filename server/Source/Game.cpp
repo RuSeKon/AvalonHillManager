@@ -8,9 +8,9 @@
 #include <vector>
 #include <iostream> 
 #include <algorithm>
-#include "share/errproc.h"
-#include "share/application.h"
-#include "share/game.h"
+#include "include/errproc.h"
+#include "include/application.h"
+#include "include/game.h"
  
 
 /* SECTION FOR CONSTANT MESSAGES */
@@ -132,7 +132,7 @@ Game *Game::GameStart(EventSelector *sel, int port)
 
 	res = listen(ls, 16);
 	if(res == -1)
-	return nullptr;
+		return nullptr;
 	
 	return new Game(sel, ls);
 }
@@ -170,6 +170,7 @@ void Game::VProcessing(bool r, bool w)
 
 	if(m_GameBegun)
 	{
+		std::cout << "Player don't connect to server, because game is runing!" << std::endl;
 		send(session_descriptor, g_AlreadyPlayingMsg, strlen(g_AlreadyPlayingMsg), 0);
 		shutdown(session_descriptor, SHUT_RDWR);
 		close(session_descriptor);
@@ -211,7 +212,6 @@ void Game::SendAll(const char* message, Player* except)
 
 void Game::RequestProc(Player* plr, const Request& req)
 {
-	
 	if(!req.GetText())
 	{
 		plr->Send(g_BadRequestMsg);
@@ -482,17 +482,19 @@ void Game::ChangeMarketLvl()
 	/*from Numerical Recipes in C: The Art of Scientific Computing*/
 	int rnd = 1 + (int)(12.0*rand()/(RAND_MAX+1.0)); //1 <= rnd <= 12
 	int i{0};
+	int old_level = m_MarketLevel;
 
 	
 	for(int res=0; res < rnd; i++)
 		res += g_MarketLevels[m_MarketLevel][i];
 	SetMarketLvl(i);
+	std::cout << "Market lavel changed from %d to %d.\n", old_level, i;
 }
 
 
 void Game::Auction(std::vector<Application>& src, int flag)
 {
-	std::cout << "Auction begin.\n";
+	std::cout << "Auction began.\n";
 	int left{0};
 
 	if(flag == Raw)
@@ -664,4 +666,4 @@ void Game::GameOver(Player* winner)
 	}
 
 	m_pSelector->BreakLoop();
-}	
+}

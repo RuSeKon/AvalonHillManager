@@ -1,0 +1,5 @@
+#Ignore vscode files
+/.vscode
+*.o
+*.mk
+server

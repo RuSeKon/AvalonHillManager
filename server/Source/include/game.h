@@ -136,7 +136,6 @@ public:
     void SendAll(const char* message, Player* except);
 	void GameBegining();
 	
-
 			/*PROCESSING PLAYER REQUESTS*/
     //Get information
 	void GetInfo(Player* plr, const Request& arg, int res); 

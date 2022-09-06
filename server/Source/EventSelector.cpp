@@ -5,7 +5,7 @@ sockets and file descriptors directly */
 #include <cerrno>
 #include <unistd.h>
 
-#include "share/application.h"
+#include "include/application.h"
 
 EventSelector::~EventSelector()
 {
@@ -25,11 +25,12 @@ void EventSelector::Add(IFdHandler *h)
 			m_pFdArray[i] = 0;
 		m_MaxFd = -1;
 	}
-	if(m_ArrayLength <= fd) {
-		IFdHandler **tmp = new IFdHandler*[fd+1];
-		for(i = 0; i< fd; i++)
-			tmp[i] =i < m_ArrayLength ? m_pFdArray[i] : 0;
-		m_ArrayLength = fd+1;
+	if(m_ArrayLength <= fd) 
+	{
+		IFdHandler **tmp = new IFdHandler*[fd*2];
+		for(i = 0; i < fd; i++)
+			tmp[i] =i < m_ArrayLength ? m_pFdArray[i] : nullptr;
+		m_ArrayLength = fd*2;
 		delete[] m_pFdArray;
 		m_pFdArray = tmp;
 	}
@@ -41,7 +42,7 @@ void EventSelector::Add(IFdHandler *h)
 bool EventSelector::Remove(IFdHandler *h)
 {
 	int fd = h->GetFd();
-	if(fd >= m_ArrayLength || m_pFdArray[fd] != h)
+	if(fd >= m_ArrayLength || m_pFdArray[fd] != h || fd < 0)
 		return false;
 	m_pFdArray[fd] = nullptr;
 	if(fd == m_MaxFd) {

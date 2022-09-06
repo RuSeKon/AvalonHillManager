@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include "share/application.h"
-#include "share/game.h"
+#include "include/application.h"
+#include "include/game.h"
 
 
 int main(int argc, char **argv)
